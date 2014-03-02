@@ -1,0 +1,39 @@
+---
+- name: base directory
+  file: path=/opt state=directory owner=root group=root mode=0755
+  tags: python27
+
+- name: check python version installed
+  command: "{{ base_dir }}/python-2.7/bin/python -V"
+  register: installed_python_version
+  failed_when: installed_python_version.rc not in [0, 2]
+  changed_when: False
+  tags: python27
+
+- name: clone xbuild
+  git: repo=https://github.com/tagomoris/xbuild.git dest=/var/tmp/xbuild
+  tags: python27
+  when: >
+    installed_python_version.rc == 2
+    or
+    installed_python_version.stderr != "Python {{python27_version}}"
+
+- name: install python 2.7
+  shell: cd /var/tmp/xbuild && ./python-install {{ python27_version }} {{ base_dir }}/python-2.7 || rm -fr {{ base_dir }}/python-2.7
+  tags: python27
+  when: >
+    installed_python_version.rc == 2
+    or
+    installed_python_version.stderr != "Python {{python27_version}}"
+
+- name: download setuptools installer
+  get_url: >
+    url=https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
+    dest=/var/tmp/ez_setup.py
+  tags: python27
+
+- name: install setuptools
+  command: >
+    "{{ base_dir }}/python-2.7/bin/python /var/tmp/ez_setup.py"
+    creates={{ base_dir }}/python-2.7/bin/easy_install
+  tags: python27

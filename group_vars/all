@@ -1,0 +1,11 @@
+---
+base_dir: "/opt"
+python_bin: "/opt/python-2.7/bin"
+sentry_db_host: "localhost"
+sentry_db_port: 5432
+sentry_db_name: "sentry"
+sentry_db_user: "sentry"
+sentry_db_password: "sentry"
+sentry_url_prefix: "http://localhost"
+sentry_server_email: "postmaster@example.com"
+redis_version: "2.8.6"

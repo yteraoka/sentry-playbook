@@ -1,0 +1,52 @@
+---
+- name: install supervisor
+  yum: name=supervisor enablerepo=epel
+  tags:
+    - sentry
+    - supervisor
+
+- name: enable service supervisord
+  service: name=supervisord enabled=yes
+  tags:
+    - sentry
+    - supervisor
+
+- name: config supervisor
+  ini_file: >
+    dest=/etc/supervisord.conf
+    section="program:sentry-web"
+    option="{{ item.option }}"
+    value="{{ item.value }}"
+  with_items:
+    - option: directory
+      value: "/apps/sentry"
+    - option: "command"
+      value: "/apps/sentry/bin/sentry --config=/etc/sentry.conf.py start http"
+    - option: user
+      value: sentry
+    - option: autostart
+      value: "true"
+    - option: autorestart
+      value: "true"
+    - option: redirect_stdout
+      value: "true"
+    - option: redirect_stderr
+      value: "true"
+    - option: stopwaitsecs
+      value: 10
+    - option: logfile
+      value: "/var/log/supervisor/sentry.log"
+    - option: logfile_maxbytes
+      value: 1MB
+    - option: logfile_backups
+      value: 10
+  tags:
+    - sentry
+    - supervisor
+  notify: restart supervisord
+
+- name: supervisord started
+  service: name=supervisord state=started
+  tags:
+    - sentry
+    - supervisor

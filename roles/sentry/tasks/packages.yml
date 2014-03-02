@@ -1,0 +1,40 @@
+---
+- name: setup epel repository (CentOS 6 x86_64)
+  yum: name=http://ftp.jaist.ac.jp/pub/Linux/Fedora/epel/6/{{ ansible_architecture }}/epel-release-6-8.noarch.rpm
+  when: ansible_distribution_version|int == 6
+  tags: epel
+
+- name: check epel gpg pub key imported
+  shell: rpm -qi gpg-pubkey-* | grep Summary | grep -q EPEL
+  register: epel_imported
+  failed_when: epel_imported.rc not in [0, 1]
+  changed_when: False
+  tags: epel
+
+- name: import epel key (CentOS 6)
+  command: rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_version|int }}
+  when: epel_imported.rc == 1
+  tags: epel
+
+- name: disable epel
+  ini_file: >
+    dest=/etc/yum.repos.d/epel.repo
+    section="epel"
+    option="enabled"
+    value="0"
+  tags: epel
+
+- name: install required packages
+  yum: name={{ item }}
+  with_items:
+    - libselinux-python
+    - gcc
+    - gcc-c++
+    - make
+    - openssl-devel
+    - zlib-devel
+    - ncurses-devel
+    - readline-devel
+    - sqlite-devel
+    - bzip2-devel
+    - postgresql-devel

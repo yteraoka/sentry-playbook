@@ -1,0 +1,40 @@
+---
+- name: create sentry group
+  group: name=sentry
+  tags: sentry
+
+- name: create sentry user
+  user: name=sentry group=sentry
+  tags: sentry
+
+- name: install virtualenv
+  command: "{{ base_dir }}/python-2.7/bin/easy_install -UZ virtualenv==1.10"
+  tags: sentry
+
+- name: easy_install sentry
+  easy_install: name=sentry[postgres] executable={{ base_dir }}/sentry/bin/easy_install virtualenv={{ base_dir }}/sentry
+  environment:
+    PATH: "{{ base_dir }}/sentry/bin:{{ base_dir }}/python-2.7/bin:/usr/bin:/bin"
+  tags: sentry
+
+- name: create directory {{ base_dir }}/sentry/etc
+  file: path={{ base_dir }}/sentry/etc state=directory owner=sentry group=sentry mode=0755
+  tags: sentry
+
+- name: initialize sentry
+  shell: . {{ base_dir }}/sentry/bin/activate && sentry init /etc/sentry.conf.py creates=/etc/sentry.conf.py
+  tags: sentry
+
+- name: generate random secret key
+  shell: dd if=/dev/urandom  bs=32 count=1 2> /dev/null | base64
+  register: sentry_random_secret_key
+  tags: sentry
+
+- name: copy sentry.conf.py
+  template: src=sentry.conf.py.j2 dest=/etc/sentry.conf.py
+  notify: restart supervisord
+  tags: sentry
+
+- name: sentry db upgrade
+  shell: . {{ base_dir }}/sentry/bin/activate && sentry --config=/etc/sentry.conf.py upgrade
+  tags: sentry

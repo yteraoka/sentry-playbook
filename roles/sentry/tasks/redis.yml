@@ -1,0 +1,20 @@
+---
+- name: download redis source
+  get_url: >
+    url=http://download.redis.io/releases/redis-{{ redis_version }}.tar.gz
+    dest=/var/tmp/redis-{{ redis_version }}.tar.gz
+  tags: redis
+
+- name: extract redis source
+  command: tar xf redis-{{ redis_version }}.tar.gz chdir=/var/tmp
+  tags: redis
+
+- name: compile redis
+  command: make chdir=/var/tmp/redis-{{ redis_version }}
+  tags: redis
+
+- name: compile redis
+  command: >
+    make PREFIX={{ base_dir }}/redis-{{ redis_version }} install
+    chdir=/var/tmp/redis-{{ redis_version }}
+  tags: redis

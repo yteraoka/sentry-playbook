@@ -1,0 +1,42 @@
+---
+- name: install pgdg repository
+  yum: name=http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm
+  tags: pgdg
+
+- name: disable pgdg
+  ini_file: >
+    dest=/etc/yum.repos.d/pgdg-93-centos.repo
+    section="pgdg93"
+    option="enabled"
+    value="0"
+  tags: pgdg
+
+- name: install postgresql
+  yum: name={{ item }} enablerepo=pgdg93
+  with_items:
+    - postgresql93-server
+  tags: pgdg
+
+- name: initdb
+  sudo_user: postgres
+  command: >
+    /usr/pgsql-9.3/bin/initdb -E utf8 --no-locale
+    -D /var/lib/pgsql/9.3/data
+    creates=/var/lib/pgsql/9.3/data/base
+  tags: pgdg
+
+- name: enable postgresql service
+  service: name=postgresql-9.3 enabled=yes state=started 
+  tags: pgdg
+
+- name: install psycopg2
+  yum: name=python-psycopg2
+  tags: pgdg
+
+- name: create database user
+  postgresql_user: >
+    name={{ sentry_db_user }}
+    password={{ sentry_db_password }}
+
+- name: create database
+  postgresql_db: name={{ sentry_db_name }} encoding=UTF8 owner=sentry lc_collate=C lc_ctype=C

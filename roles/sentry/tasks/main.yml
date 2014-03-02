@@ -1,0 +1,8 @@
+---
+# tasks file for sentry
+- include: packages.yml
+- include: redis.yml
+- include: python27.yml
+- include: pgdg93.yml
+- include: supervisor.yml
+- include: sentry.yml
